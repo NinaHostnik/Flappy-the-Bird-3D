@@ -152,40 +152,40 @@ function initBuffers() {
   // Array of vertices for the flappy.
   vertices = [
     // Front face
-    -1.0, -1.0,  1.0,
-     1.0, -1.0,  1.0,
-     1.0,  1.0,  1.0,
-    -1.0,  1.0,  1.0,
+    -0.1, -0.1,  0.1,
+     0.1, -0.1,  0.1,
+     0.1,  0.1,  0.1,
+    -0.1,  0.1,  0.1,
 
     // Back face
-    -1.0, -1.0, -1.0,
-    -1.0,  1.0, -1.0,
-     1.0,  1.0, -1.0,
-     1.0, -1.0, -1.0,
+    -0.1, -0.1, -0.1,
+    -0.1,  0.1, -0.1,
+     0.1,  0.1, -0.1,
+     0.1, -0.1, -0.1,
 
     // Top face
-    -1.0,  1.0, -1.0,
-    -1.0,  1.0,  1.0,
-     1.0,  1.0,  1.0,
-     1.0,  1.0, -1.0,
+    -0.1,  0.1, -0.1,
+    -0.1,  0.1,  0.1,
+     0.1,  0.1,  0.1,
+     0.1,  0.1, -0.1,
 
     // Bottom face
-    -1.0, -1.0, -1.0,
-     1.0, -1.0, -1.0,
-     1.0, -1.0,  1.0,
-    -1.0, -1.0,  1.0,
+    -0.1, -0.1, -0.1,
+     0.1, -0.1, -0.1,
+     0.1, -0.1,  0.1,
+    -0.1, -0.1,  0.1,
 
     // Right face
-     1.0, -1.0, -1.0,
-     1.0,  1.0, -1.0,
-     1.0,  1.0,  1.0,
-     1.0, -1.0,  1.0,
+     0.1, -0.1, -0.1,
+     0.1,  0.1, -0.1,
+     0.1,  0.1,  0.1,
+     0.1, -0.1,  0.1,
 
     // Left face
-    -1.0, -1.0, -1.0,
-    -1.0, -1.0,  1.0,
-    -1.0,  1.0,  1.0,
-    -1.0,  1.0, -1.0
+    -0.1, -0.1, -0.1,
+    -0.1, -0.1,  0.1,
+    -0.1,  0.1,  0.1,
+    -0.1,  0.1, -0.1
   ];
   
   // Now pass the list of vertices into WebGL to build the shape. We
@@ -267,7 +267,7 @@ function drawScene() {
 
   // Now move the drawing position a bit to where we want to start
   // drawing the flappy.
-  mat4.translate(mvMatrix, mvMatrix, [0.0, 0.0, -7.0]);
+  mat4.translate(mvMatrix, [0.0, 0.0, -7.0]);
 
 
   // Draw the flappy by binding the array buffer to the flappy's vertices
@@ -415,7 +415,7 @@ function start() {
     gl.enable(gl.DEPTH_TEST);                               // Enable depth testing
     gl.depthFunc(gl.LEQUAL);                                // Near things obscure far things
 	//startWindow();
-
+	console.log("1");
     // Initialize the shaders; this is where all the lighting for the
     // vertices and so forth is established.
     initShaders();
@@ -440,7 +440,7 @@ function start() {
       }
     }, 15);*/
 	setInterval(function() {
-      //requestAnimationFrame(animate);
+      requestAnimationFrame(animate);
       drawScene();
     }, 15);
   }
