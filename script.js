@@ -92,6 +92,7 @@ var hitInd = 0.9;	//ker spreminjamo velikost ptica, mormo tut obcutljivost colli
 var imunity = -1; //st obroca, ki smo ga zadeli/zgresili z imuniteto
 var enemySpeed = 0.25; //hitrost sovražnih ptičev
 var sight = 100;	//dolžina vidnega polja
+var lastPoints = -1; //prepreči dvojne 
 var bestScores = [50, 45, 40, 35, 30, 25, 20, 15, 10, 5];
 var bestScoreNames = ["Kevin", "Oscar", "Pam", "Jim", "Dwight",
 					  "Angela", "Ryan", "Meridith", "Creed", "Michael"];
@@ -814,7 +815,7 @@ function drawScene() {
 		mesgOver = "";
 		document.getElementById("mesgOver").innerHTML = mesgOver;
 		if(y == 2 && duration < ringsPassed){
-			sight = 20;
+			sight = 15;
 		}
 		else if(y == 2 &&duration == ringsPassed){
 			y = -1;
@@ -847,8 +848,8 @@ function drawScene() {
 		
 			//powerup za manjsega ptica
 		if(x = 0 && duration < ringsPassed){
-			mat4.scale(mvMatrix, [0.7, 0.7, 0.7]);
-			hitInd = hitInd + 0.07;
+			mat4.scale(mvMatrix, [0.1, 0.1, 0.1]);
+			hitInd = hitInd + 0.01;
 		}
 		if(x = 0 && duration == ringsPassed){
 			x = -1;
@@ -874,7 +875,7 @@ function drawScene() {
 		if(falling == 1){
 			asc = 0;
 			if(y == 3 && duration < ringsPassed){
-				yMov = yMov - fall*(Math.random()*0.3);
+				yMov = yMov - fall*(Math.random()*0.5);
 				fall = fall + Math.random()*0.1;
 			}
 			if(y == 3 && duration < ringsPassed){
@@ -892,18 +893,9 @@ function drawScene() {
 			if(posZ[j]+0.1 >= -7.1 && posZ[j]-0.1 <= -6.9){	//ptič vzporedno z obročem po Z
 				//console.log("in");
 				if(posX[j]-xMov > -hitInd && posX[j]-xMov < hitInd){	//po X je ptič v obroču
+					//console.log("in");
 					if(posY[j]-yMov > -hitInd && posY[j]-yMov < hitInd){	//po X je ptič v obroču
-						if(posZ[j]-0.1 == -6.9){
-							ringsPassed = ringsPassed + 1;
-								//dvojne točke
-							if(x = 1 && duration < ringsPassed){
-								ringsPassed = ringsPassed + 1;
-							}
-							if(x = 1 && duration == ringsPassed){
-								x = -1;
-								duration = 0;
-							}
-						}
+						//console.log("in2");
 					}
 				}
 				else{
@@ -924,7 +916,20 @@ function drawScene() {
 					
 				}
 			}
-			if(posZ[j] > -6.0 && imunity == j){
+			if(posZ[j]-0.1 <= -6.82 && posZ[j]-0.1 >= -6.9){
+				ringsPassed = ringsPassed + 1;
+				console.log("ringsPassed");
+					//dvojne točke
+				if(x = 1 && duration < ringsPassed){
+					ringsPassed = ringsPassed + 1;
+				}
+				if(x = 1 && duration == ringsPassed){
+					x = -1;
+					duration = 0;
+				}
+			}
+			
+			if(posZ[j] > -1.0 && imunity == j){
 				imunity = -1;
 			}
 			mvPushMatrix();
@@ -1003,10 +1008,10 @@ function drawScene() {
 			mvPopMatrix();
 			if(gameOver == 0){
 				if(x == 2 && duration < ringsPassed){
-					posZ[j] = posZ[j] + 0.04;
+					posZ[j] = posZ[j] + 0.01;
 				}
 				else if(y == 1&& duration < ringsPassed){
-					posZ[j] = posZ[j] + 0.12;
+					posZ[j] = posZ[j] + 0.2;
 				}
 				else{
 					if(duration == ringsPassed){
@@ -1190,7 +1195,7 @@ function handleKeys() {
 	falling = 0;
 	fall = 0;
 	if(y == 3 && duration < ringsPassed){
-		yMov = yMov + asc*(Math.random()*0.3);
+		yMov = yMov + asc*(Math.random()*0.5);
 		asc = asc + (Math.random()*0.1);
 	}
 	else if(y == 3 && duration < ringsPassed){
@@ -1272,6 +1277,7 @@ function enemyBirds(){
 
 function handlePU(){
 	duration = ringsPassed + 3;
+	console.log(duration);
 	if(puG == 1){
 		x = Math.floor(Math.random()* 4); //se ni osvetlitve, zato ena manj
 		console.log("x"+x);
@@ -1376,6 +1382,7 @@ function start() {
 	setInterval(function() {
       requestAnimationFrame(animate);
 	  falling = 1;
+	  //handlePU();
 	  defense = 0;
 	  if(gameOver == 1){
 		  handleGameOver();
