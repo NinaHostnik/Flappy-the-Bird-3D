@@ -1349,6 +1349,45 @@ koncni zaslon
 *
 */
 
+//loading of ring file
+function handleLoadedRing(ringData) {
+	ringVertexNormalBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, ringVertexNormalBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(ringData.vertexNormals), gl.STATIC_DRAW);
+	ringVertexNormalBuffer.itemSize = 3;
+	ringVertexNormalBuffer.numItems = ringData.vertexNormals.length / 3;
+	
+	ringVertexPositionBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, ringVertexPositionBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(ringData.vertexPosition), gl.STATIC_DRAW);
+	ringVertexNormalBuffer.itemSize = 3;
+	ringVertexNormalBuffer.numItems = ringData.vertexPosition.length / 3;
+	
+	ringVertexColorBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, ringVertexColorBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(ringData.vertexColorAttribute), gl.STATIC_DRAW);
+	ringVertexColorBuffer.itemSize = 3;
+	ringVertexColorBuffer.numItems = ringData.vertexColorAttribute.length / 3;
+	
+	ringVertexIndexBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ringVertexIndexBuffer);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(ringData.indices), gl.STATIC_DRAW);
+	ringVertexIndexBuffer.itemSize = 1;
+	ringVertexIndexBuffer.numItems = ringData.indices.length;
+	
+	document.getElementById(loadingtext).textContent = "";
+}
+
+function loadRing() {
+	var request = new XMLHttpRequest();
+	request.open("GET", "./ring.json");
+	request.onreadystatechange = function() {
+		if (request.readyState == 4) {
+			handleLoadedRing(JSON.parse(request.responseText));
+		}
+	};
+}
+
 //funkcija start
 function start() {
   canvas = document.getElementById("glcanvas");
