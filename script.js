@@ -26,14 +26,18 @@ posZ = [-10.0, -20.0, -30.0, -40.0, -50.0,
 		-148.0, -156.0, -164.0, -172.0, -180.0,
 		-186.0, -192.0, -198.0, -204.0, -210.0,
 		-216.0, -222.0, -228.0, -234.0, -240.0,
-		-240.0, -240.0, -240.0, -240.0, -240.0,
-		-240.0, -240.0, -240.0, -240.0, -240.0,
-		-240.0, -240.0, -240.0, -240.0, -240.0,
-		-240.0, -240.0, -240.0, -240.0, -240.0,
-		-240.0, -240.0, -240.0, -240.0, -240.0,
-		-240.0, -240.0, -240.0, -240.0, -240.0
+		-246.0, -252.0, -258.0, -264.0, -270.0,
+		-276.0, -282.0, -288.0, -294.0, -300.0,
+		-306.0, -312.0, -318.0, -324.0, -330.0,
+		-336.0, -342.0, -348.0, -354.0, -360.0,
+		-366.0, -372.0, -378.0, -384.0, -390.0,
+		-396.0, -402.0, -408.0, -414.0, -420.0
 		];	//60
-
+		
+//enemy bird start position
+enX = [500.0, -500.0, 300.0, -400.0, 50.0, 250.0, -310.0, 100.0, -450.0, 350.0];
+enY = [200.0, 200.0, -300.0, -300.0, 300.0, 300.0, -300.0, 300.0, 300.0, -300.0];
+enZ = [50.0, 80.0, 120.0, 150.0, 180.0, 240.0, 300.0, 350.0, 400.0, 410.0];
 
 //Buffers
 var flappyVertexPositionBuffer;
@@ -43,6 +47,11 @@ var flappyVertexIndexBuffer;
 var enemyVertexPositionBuffer;
 var enemyVertexColorBuffer;
 var enemyVertexIndexBuffer;
+
+var powerVertexPositionBuffer;
+var powerGVertexColorBuffer;
+var powerBVertexColorBuffer;
+var powerVertexIndexBuffer;
 
 var ringVertexPositionBuffer;
 var ringVertexColorBuffer;
@@ -56,15 +65,17 @@ var pMatrix = mat4.create();
 //useful variables
 //var rotationFlappy = 0;  maybe bomo rabl
 var camera = 1; //2 je fisrt person view
-var viewpoint = 6.0; //predvidevamo, da smo najprej v noramalnem pogledu
+var viewpoint = 5.0; //predvidevamo, da smo najprej v noramalnem pogledu
 var falling = 0;	//trenutno NI pritisnjen W
 var asc = 0;	//let navzgor
 var ringsPassed = 0;	//score counter, TBD
 var gameOver = 0;		//game stopper, TBD
+var finX = 0;	//shrani x ko se zaletimo
+var finY = 0;	//shrani y ko se zaletimo
 var starting = 0;		//igra teče
-var distance = 10;	//??
-var StartDistance = 15;		//??
-var speed = 0.1;	//movement speed
+var puG = 0;	//ptic pobral good powerup
+var puB = 0;	//ptic pobral bad powerup
+var speed = 0.08;	//movement speed
 var xMov = 0;	//change of direction x by keyboard
 var yMov = 0;	//change of direction y by keyboard
 var zMov = 0;	//not used
@@ -74,6 +85,20 @@ var ezMode = 0;		//easy mode, no leveling, unable to get on highscore list, TBD
 var lastTime = 0;	//??
 var fall = 0;		//padanje navzdol
 var pause =0;
+var x = -1;	//random good powerup index
+var y = -1;	//random bad powerup index
+var duration = 0; //vsi powerupi veljajo, dokler ne preletimo  treh obročev
+var hitInd = 0.9;	//ker spreminjamo velikost ptica, mormo tut obcutljivost collision detectiona
+var imunity = -1; //st obroca, ki smo ga zadeli/zgresili z imuniteto
+var enemySpeed = 0.25; //hitrost sovražnih ptičev
+var sight = 100;	//dolžina vidnega polja
+var bestScores = [50, 45, 40, 35, 30, 25, 20, 15, 10, 5];
+var bestScoreNames = ["Kevin", "Oscar", "Pam", "Jim", "Dwight",
+					  "Angela", "Ryan", "Meridith", "Creed", "Michael"];
+var mesgOver = "";		
+		
+		
+		
 
 function mvPushMatrix() {
   var copy = mat4.create();
@@ -426,6 +451,137 @@ function initBuffers() {
   enemyVertexIndexBuffer.numItems = 36;
   
   
+  //powerup
+    powerVertexPositionBuffer = gl.createBuffer();
+  
+  // powerVertexPositionBuffer as the one to apply vertex
+  // operations to from here out.
+  gl.bindBuffer(gl.ARRAY_BUFFER, powerVertexPositionBuffer);
+  
+  vertices = [
+    // Front face
+    -0.5, -0.5,  0.1,
+     0.5, -0.5,  0.1,
+     0.5,  0.5,  0.1,
+    -0.5,  0.5,  0.1,
+
+    // Back face
+    -0.5, -0.5, -0.0,
+    -0.5,  0.5, -0.0,
+     0.5,  0.5, -0.0,
+     0.5, -0.5, -0.0,
+
+    // Top face
+    -0.5,  0.5, -0.0,
+    -0.5,  0.5,  0.1,
+     0.5,  0.5,  0.1,
+     0.5,  0.5, -0.0,
+
+    // Bottom face
+    -0.5, -0.5, -0.0,
+     0.5, -0.5, -0.0,
+     0.5, -0.5,  0.1,
+    -0.5, -0.5,  0.1,
+
+    // Right face
+     0.5, -0.5, -0.0,
+     0.5,  0.5, -0.0,
+     0.5,  0.5,  0.1,
+     0.5, -0.5,  0.1,
+
+    // Left face
+    -0.5, -0.5, -0.0,
+    -0.5, -0.5,  0.1,
+    -0.5,  0.5,  0.1,
+    -0.5,  0.5, -0.0
+  ];
+  
+  // Now pass the list of vertices into WebGL to build the shape. We
+  // do this by creating a Float32Array from the JavaScript array,
+  // then use it to fill the current vertex buffer.
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+  powerVertexPositionBuffer.itemSize = 3;
+  powerVertexPositionBuffer.numItems = 24;
+  
+  powerGVertexColorBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, powerGVertexColorBuffer);
+  colorsPG = [
+      [0.0, 1.0, 1.0, 0.1], // Front face
+      [0.0, 1.0, 1.0, 0.1], // Back face
+      [0.0, 1.0, 1.0, 0.1], // Top face
+      [0.0, 1.0, 1.0, 0.1], // Bottom face
+      [0.0, 1.0, 1.0, 0.1], // Right face
+      [0.0, 1.0, 1.0, 0.1]  // Left face
+  ];
+
+  // Convert the array of colors into a table for all the vertices.
+  var unpackedColorsPG = [];
+  for (var i in colorsPG) {
+    var color = colorsPG[i];
+
+    // Repeat each color four times for the four vertices of the face
+    for (var j=0; j < 4; j++) {
+          unpackedColorsPG = unpackedColorsPG.concat(color);
+      }
+  }
+  
+  // Pass the colors into WebGL
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(unpackedColorsPG), gl.STATIC_DRAW);
+  powerGVertexColorBuffer.itemSize = 4;
+  powerGVertexColorBuffer.numItems = 24;
+  
+  powerBVertexColorBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, powerBVertexColorBuffer);
+  colorsPB = [
+      [1.0, 0.0, 1.0, 0.1], // Front face
+      [1.0, 0.0, 1.0, 0.1], // Back face
+      [1.0, 0.0, 1.0, 0.1], // Top face
+      [1.0, 0.0, 1.0, 0.1], // Bottom face
+      [1.0, 0.0, 1.0, 0.1], // Right face
+      [1.0, 0.0, 1.0, 0.1]  // Left face
+  ];
+
+  // Convert the array of colors into a table for all the vertices.
+  var unpackedColorsPB = [];
+  for (var i in colorsPB) {
+    var color = colorsPB[i];
+
+    // Repeat each color four times for the four vertices of the face
+    for (var j=0; j < 4; j++) {
+          unpackedColorsPB = unpackedColorsPB.concat(color);
+      }
+  }
+  
+  // Pass the colors into WebGL
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(unpackedColorsPB), gl.STATIC_DRAW);
+  powerBVertexColorBuffer.itemSize = 4;
+  powerBVertexColorBuffer.numItems = 24;
+
+  // Build the element array buffer; this specifies the indices
+  // into the vertex array for each face's vertices.
+  powerVertexIndexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, powerVertexIndexBuffer);
+
+  // This array defines each face as two triangles, using the
+  // indices into the vertex array to specify each triangle's
+  // position.
+  var powerVertexIndices = [
+      0, 1, 2,      0, 2, 3,    // Front face
+      4, 5, 6,      4, 6, 7,    // Back face
+      8, 9, 10,     8, 10, 11,  // Top face
+      12, 13, 14,   12, 14, 15, // Bottom face
+      16, 17, 18,   16, 18, 19, // Right face
+      20, 21, 22,   20, 22, 23  // Left face
+  ];
+
+  // Now send the element array to GL
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(powerVertexIndices), gl.STATIC_DRAW);
+  powerVertexIndexBuffer.itemSize = 1;
+  powerVertexIndexBuffer.numItems = 36;
+  
+  
+  
+  
   //"ring"
   
    ringVertexPositionBuffer = gl.createBuffer();
@@ -537,7 +693,8 @@ function drawScene() {
 		
 	}
 	else if(gameOver == 0 && starting == 0){  //IGRA NE TEČE
-	
+		mesgOver = "";
+		document.getElementById("mesgOver").innerHTML = mesgOver;
 		// set the rendering environment to full canvas size
 		gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 		// Clear the canvas before we start drawing on it.
@@ -547,7 +704,7 @@ function drawScene() {
 		// scene. Our field of view is 45 degrees, with a width/height
 		// ratio and we only want to see objects between 0.1 units
 		// and 100 units away from the camera.
-		mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, viewpoint, 100.0, pMatrix);
+		mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, viewpoint, sight, pMatrix);
 		// Set the drawing position to the "identity" point, which is
 		// the center of the scene.
 		mat4.identity(mvMatrix);
@@ -615,14 +772,59 @@ function drawScene() {
 				gl.drawElements(gl.TRIANGLES, ringVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 				mvPopMatrix();
 			}
+			if(j%5==0 && j > 0){ //good powerup
+				mvPushMatrix();
+				
+				gl.bindBuffer(gl.ARRAY_BUFFER, powerVertexPositionBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, powerVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+				// Set the colors attribute for the vertices.
+				gl.bindBuffer(gl.ARRAY_BUFFER, powerGVertexColorBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, powerGVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, powerVertexIndexBuffer);
+				
+				// Draw the good powerup.
+				setMatrixUniforms();
+				gl.drawElements(gl.TRIANGLES, powerVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+				mvPopMatrix();
+			}
+			else if(j%6==0 && j%5!= 0){ //bad powerup
+				mvPushMatrix();
+				
+				gl.bindBuffer(gl.ARRAY_BUFFER, powerVertexPositionBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, powerVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+				// Set the colors attribute for the vertices.
+				gl.bindBuffer(gl.ARRAY_BUFFER, powerBVertexColorBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, powerBVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, powerVertexIndexBuffer);
+				
+				// Draw the bad powerup.
+				setMatrixUniforms();
+				gl.drawElements(gl.TRIANGLES, powerVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+				mvPopMatrix();
+			}
 			mvPopMatrix();
 		}
 	}
 	else if (gameOver == 0 && starting == 1){  //IGRA TEČE
 		// isto kot zgoraj
+		mesgOver = "";
+		document.getElementById("mesgOver").innerHTML = mesgOver;
+		if(y == 2 && duration < ringsPassed){
+			sight = 20;
+		}
+		else if(y == 2 &&duration == ringsPassed){
+			y = -1;
+			duration = 0;
+			sight = 100;
+		}
+		
 		gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, viewpoint, 100.0, pMatrix);
+		mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, viewpoint, sight, pMatrix);
 		mat4.identity(mvMatrix);
 
 		// Flappy:
@@ -642,6 +844,17 @@ function drawScene() {
 
 		// Draw the flappy by binding the array buffer to the flappy's vertices
 		// array, setting attributes, and pushing it to GL.
+		
+			//powerup za manjsega ptica
+		if(x = 0 && duration < ringsPassed){
+			mat4.scale(mvMatrix, [0.7, 0.7, 0.7]);
+			hitInd = hitInd + 0.07;
+		}
+		if(x = 0 && duration == ringsPassed){
+			x = -1;
+			hitInd = 0.9;
+			duration = 0;
+		}
 		gl.bindBuffer(gl.ARRAY_BUFFER, flappyVertexPositionBuffer);
 		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, flappyVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
@@ -656,31 +869,68 @@ function drawScene() {
 		gl.drawElements(gl.TRIANGLES, flappyVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		//console.log("x"+xMov);
 		//console.log("y"+yMov);
-		console.log("lap");
+		//console.log("lap");
 		mvPopMatrix();
 		if(falling == 1){
 			asc = 0;
-			yMov = yMov - fall*0.1;
-			fall = fall + 0.05;
+			if(y == 3 && duration < ringsPassed){
+				yMov = yMov - fall*(Math.random()*0.3);
+				fall = fall + Math.random()*0.1;
+			}
+			if(y == 3 && duration < ringsPassed){
+				y = -1; 
+				duration = 0;
+				yMov = yMov - fall*0.1;
+				fall = fall + 0.05;
+			}
+			else{
+				yMov = yMov - fall*0.1;
+				fall = fall + 0.05;
+			}
 		}
 		for(var j = 0; j<posX.length; j++){		//RISANJE OBROČEV
-			if(posZ[j]+0.1 > -7.1 && posZ[j]-0.1 < 6.9){	//ptič vzporedno z obročem po Z
-				console.log("in");
-				if(posX[j]-xMov > -0.5 && posX[j]-xMov < 0.5){	//po X je ptič v obroču
-					if(posY[j]-yMov > -0.5 && posY[j]-yMov < 0.5){	//po X je ptič v obroču
-						
+			if(posZ[j]+0.1 >= -7.1 && posZ[j]-0.1 <= -6.9){	//ptič vzporedno z obročem po Z
+				//console.log("in");
+				if(posX[j]-xMov > -hitInd && posX[j]-xMov < hitInd){	//po X je ptič v obroču
+					if(posY[j]-yMov > -hitInd && posY[j]-yMov < hitInd){	//po X je ptič v obroču
+						if(posZ[j]-0.1 == -6.9){
+							ringsPassed = ringsPassed + 1;
+								//dvojne točke
+							if(x = 1 && duration < ringsPassed){
+								ringsPassed = ringsPassed + 1;
+							}
+							if(x = 1 && duration == ringsPassed){
+								x = -1;
+								duration = 0;
+							}
+						}
 					}
 				}
 				else{
-					gameOver = 1; //ptič ni v obroču, konec igre
-					starting = 0; //ne igramo več
-					console.log("over");
+					if(x == 3){
+						imunity = j;
+						x = -1;
+					}
+					else if(imunity == j){
+						//ne umremo, ne dobimo tock za ta obroc
+					}
+					else{
+						gameOver = 1; //ptič ni v obroču, konec igre
+						starting = 0; //ne igramo več
+						//console.log("over");
+						finX = xMov;
+						finY = yMov;
+					}
+					
 				}
+			}
+			if(posZ[j] > -6.0 && imunity == j){
+				imunity = -1;
 			}
 			mvPushMatrix();
 			mat4.translate(mvMatrix, [-xMov + posX[j], -yMov + posY[j], posZ[j]]);
-			console.log("x"+(-xMov+ posX[j]));
-			console.log("y"+(-yMov+ posY[j]));
+			//console.log("x"+(-xMov+ posX[j]));
+			//console.log("y"+(-yMov+ posY[j]));
 			for(var i = 0; i<4; i++){
 				mvPushMatrix();
 				mat4.rotate(mvMatrix, degToRad(i*90), [0, 0, 1]);
@@ -702,17 +952,87 @@ function drawScene() {
 				gl.drawElements(gl.TRIANGLES, ringVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 				mvPopMatrix();
 			}
+			if(j%5==0 && j > 0){ //good powerup
+				mvPushMatrix();
+				if(posZ[j]+0.1 >= -7.1 && posZ[j]+0.1 <= -7.0){
+					if(posX[j]-xMov > -0.4 && posX[j]-xMov < 0.4){	//po X je ptič zadel powerup
+						if(posY[j]-yMov > -0.4 && posY[j]-yMov < 0.4){	//po Y je ptič zadel powerup
+							puG = 1;
+							handlePU();
+						}
+					}
+				}
+				gl.bindBuffer(gl.ARRAY_BUFFER, powerVertexPositionBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, powerVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+				// Set the colors attribute for the vertices.
+				gl.bindBuffer(gl.ARRAY_BUFFER, powerGVertexColorBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, powerGVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, powerVertexIndexBuffer);
+				
+				// Draw the good powerup.
+				setMatrixUniforms();
+				gl.drawElements(gl.TRIANGLES, powerVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+				mvPopMatrix();
+			}
+			else if(j%6==0 && j%5!= 0){ //bad powerup
+				mvPushMatrix();
+				if(posZ[j]+0.1 >= -7.1 && posZ[j]+0.1 <= -7.0){
+					if(posX[j]-xMov > -0.4 && posX[j]-xMov < 0.4){	//po X je ptič zadel powerup
+						if(posY[j]-yMov > -0.4 && posY[j]-yMov < 0.4){	//po Y je ptič zadel powerup
+							puB = 1;
+							handlePU();
+						}
+					}
+				}
+				gl.bindBuffer(gl.ARRAY_BUFFER, powerVertexPositionBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, powerVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+				// Set the colors attribute for the vertices.
+				gl.bindBuffer(gl.ARRAY_BUFFER, powerBVertexColorBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, powerBVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, powerVertexIndexBuffer);
+				
+				// Draw the bad powerup.
+				setMatrixUniforms();
+				gl.drawElements(gl.TRIANGLES, powerVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+				mvPopMatrix();
+			}
 			mvPopMatrix();
 			if(gameOver == 0){
-				posZ[j] = posZ[j] + speed;
+				if(x == 2 && duration < ringsPassed){
+					posZ[j] = posZ[j] + 0.04;
+				}
+				else if(y == 1&& duration < ringsPassed){
+					posZ[j] = posZ[j] + 0.12;
+				}
+				else{
+					if(duration == ringsPassed){
+						if(x==2){x=-1;}
+						if(y==1){y=-1;}
+						duration = 0;
+					}
+					posZ[j] = posZ[j] + speed;
+				}
 			}
 		}
 	}
 	else if(gameOver == 1){
-		// isto kot zgoraj
+		// isto kot zgoraj		
+		if(y == 2 && duration < ringsPassed){
+			sight = 20;
+		}
+		else if(y == 2 &&duration == ringsPassed){
+			y = -1;
+			duration = 0;
+			sight = 100;
+		}
+		
 		gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, viewpoint, 100.0, pMatrix);
+		mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, viewpoint, sight, pMatrix);
 		mat4.identity(mvMatrix);
 
 		// Flappy:
@@ -732,6 +1052,17 @@ function drawScene() {
 
 		// Draw the flappy by binding the array buffer to the flappy's vertices
 		// array, setting attributes, and pushing it to GL.
+		
+		if(x = 0 && duration < ringsPassed){
+			mat4.scale(mvMatrix, [0.7, 0.7, 0.7]);
+			hitInd = hitInd + 0.07;
+		}
+		if(x = 0 && duration == ringsPassed){
+			x = -1;
+			hitInd = 0.9;
+			duration = 0;
+		}
+		
 		gl.bindBuffer(gl.ARRAY_BUFFER, flappyVertexPositionBuffer);
 		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, flappyVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
@@ -748,7 +1079,7 @@ function drawScene() {
 		mvPopMatrix();
 		for(var j = 0; j<posX.length; j++){		//RISANJE OBROČEV
 			mvPushMatrix();
-			mat4.translate(mvMatrix, [-xMov + posX[j], -yMov + posY[j], posZ[j]]);
+			mat4.translate(mvMatrix, [-finX + posX[j], -finY + posY[j], posZ[j]]);
 			for(var i = 0; i<4; i++){
 				mvPushMatrix();
 				mat4.rotate(mvMatrix, degToRad(i*90), [0, 0, 1]);
@@ -768,6 +1099,40 @@ function drawScene() {
 				// Draw the ring.
 				setMatrixUniforms();
 				gl.drawElements(gl.TRIANGLES, ringVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+				mvPopMatrix();
+			}
+			if(j%5==0 && j > 0){ //good powerup
+				mvPushMatrix();
+				
+				gl.bindBuffer(gl.ARRAY_BUFFER, powerVertexPositionBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, powerVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+				// Set the colors attribute for the vertices.
+				gl.bindBuffer(gl.ARRAY_BUFFER, powerGVertexColorBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, powerGVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, powerVertexIndexBuffer);
+				
+				// Draw the good powerup.
+				setMatrixUniforms();
+				gl.drawElements(gl.TRIANGLES, powerVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+				mvPopMatrix();
+			}
+			else if(j%6==0 && j%5!= 0){ //bad powerup
+				mvPushMatrix();
+				
+				gl.bindBuffer(gl.ARRAY_BUFFER, powerVertexPositionBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, powerVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+				// Set the colors attribute for the vertices.
+				gl.bindBuffer(gl.ARRAY_BUFFER, powerBVertexColorBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, powerBVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, powerVertexIndexBuffer);
+				
+				// Draw the bad powerup.
+				setMatrixUniforms();
+				gl.drawElements(gl.TRIANGLES, powerVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 				mvPopMatrix();
 			}
 			mvPopMatrix();
@@ -820,17 +1185,39 @@ function handleKeys() {
 	if (starting == 0){
 		//trenutno igra ne teče, zaženemo z tipko W
 		starting = 1;
-		console.log("1");
+		//console.log("1");
 	}
 	falling = 0;
 	fall = 0;
-	yMov = yMov + asc*0.1;
-	asc = asc + 0.05;
+	if(y == 3 && duration < ringsPassed){
+		yMov = yMov + asc*(Math.random()*0.3);
+		asc = asc + (Math.random()*0.1);
+	}
+	else if(y == 3 && duration < ringsPassed){
+		y = -1;
+		duration = 0;
+		yMov = yMov + asc*0.1;
+		asc = asc + 0.05;
+	}
+	else{
+		yMov = yMov + asc*0.1;
+		asc = asc + 0.05;
+	}
 	
   }
   if (currentlyPressedKeys[65]) {
     //A
-	xMov = xMov - speed;
+	if(y == 0 && duration < ringsPassed){
+		xMov = xMov + speed;
+	}
+	else if(y == 0 && duration == ringsPassed){
+		xMov = xMov - speed;
+		duration = 0;
+		y = -1;
+	}
+	else{
+		xMov = xMov - speed;
+	}
   }
   if (currentlyPressedKeys[83]) {
     // S
@@ -839,7 +1226,17 @@ function handleKeys() {
   }
   if (currentlyPressedKeys[68]) {
     // D
-	xMov = xMov + speed;
+	if(y == 0 && duration < ringsPassed){
+		xMov = xMov - speed;
+	}
+	else if(y == 0 && duration == ringsPassed){
+		xMov = xMov + speed;
+		duration = 0;
+		y = -1;
+	}
+	else{
+		xMov = xMov + speed;
+	}
   }
   if (currentlyPressedKeys[32]) {
     // SPACE
@@ -859,28 +1256,6 @@ zacetni zaslon
 *
 *
 */
-function startWindow () {
-	/*window.addEventListener("DOMContentLoaded", function() {
-			var fr = new FileReader();
-			
-			var image  = "testbg.png";
-			var canvas = document.createElement("canvas");
-			document.body.appendChild(canvas);
-
-			canvas.width  = image.width;
-			canvas.height = image.height;
-
-			var context = canvas.getContext("2d");
-
-			context.drawImage(image, 0, 0);
-		});*/
-	/*backTexture = gl.createTexture();
-	backTexture.Img = new Image();
-	backTexture.Img.onload()= function() {
-		handleBkTex(backTexture);
-	}
-	backTexture.Img.src = "testbg.png";*/
-}
 
 
 /*
@@ -892,6 +1267,61 @@ igra
 */
 
 function enemyBirds(){
+	
+}
+
+function handlePU(){
+	duration = ringsPassed + 3;
+	if(puG == 1){
+		x = Math.floor(Math.random()* 4); //se ni osvetlitve, zato ena manj
+		console.log("x"+x);
+		// x=0: vecji obroci -> ubistvu je isto, ce zmanjsamo ptica
+		if(x == 1){
+			//dvojne tocke za obroce
+			duration = duration + 3;
+		}
+		//x=2: pocasnejsi let
+		//x=3: imuniteta, velja, dokler ne porabimo
+		//x=4: osvetlitev obrocev, TBD
+		puG = 0;
+	}
+	if(puB == 1){
+		y = Math.floor(Math.random()* 4);
+		console.log("y"+y);
+		//y=0: obrnjeno levo-desno
+		//y=1: hitrejši let
+		//y=2: vidimo manj obročev
+		//y=3: naključna hitrost vzpenjanja/padanja
+		puB = 0;
+	}
+}
+
+function handleGameOver(){
+	for(var i = 0; i<10; i++){
+		if(bestScores[i] < ringsPassed && ezMode == 0){
+			bestScores[i] = ringsPassed;
+			bestScoreNames[i] = "player";
+			break;
+		}
+	}
+	mesgOver = "GAME OVER"
+	document.getElementById("mesgOver").innerHTML = mesgOver;
+	var falling = 0;	//trenutno NI pritisnjen W
+	var asc = 0;	//let navzgor
+	var ringsPassed = 0;	//score counter, TBD
+	var gameOver = 0;		//game stopper
+	var starting = 0;		//igra teče
+	var speed = 0.08;	//movement speed
+	var xMov = 0;	//change of direction x by keyboard
+	var yMov = 0;	//change of direction y by keyboard
+	var zMov = 0;	//not used
+	var defense = 0;	//a je bil pritisnjen space al ne
+	var fall = 0;		//padanje navzdol
+	var x = -1;	//random good powerup index
+	var y = -1;	//random bad powerup index
+	var duration = 0; //vsi powerupi veljajo, dokler ne preletimo treh obročev, razen imunitete
+	var hitInd = 0.9; //ker spreminjamo velikost ptica, mormo tut obcutljivost collision detectiona
+	var imunity = -1; //st obroca, ki smo ga zadeli/zgresili z imuniteto
 	
 }
 
@@ -927,6 +1357,9 @@ function start() {
     gl.depthFunc(gl.LEQUAL);                                // Near things obscure far things
     // Initialize the shaders; this is where all the lighting for the
     // vertices and so forth is established.
+	gameOver = 0;
+	pause = 0;
+	starting = 0;
     initShaders();
     
     // Here's where we call the routine that builds all the objects
@@ -944,6 +1377,9 @@ function start() {
       requestAnimationFrame(animate);
 	  falling = 1;
 	  defense = 0;
+	  if(gameOver == 1){
+		  handleGameOver();
+	  }
 	  handleKeys();
       drawScene();
     }, 15);
