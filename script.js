@@ -91,8 +91,7 @@ var duration = 0; //vsi powerupi veljajo, dokler ne preletimo  treh obročev
 var hitInd = 0.9;	//ker spreminjamo velikost ptica, mormo tut obcutljivost collision detectiona
 var imunity = -1; //st obroca, ki smo ga zadeli/zgresili z imuniteto
 var enemySpeed = 0.25; //hitrost sovražnih ptičev
-var sight = 100;	//dolžina vidnega polja
-var lastPoints = -1; //prepreči dvojne 
+var sight = 100;	//dolžina vidnega polja 
 var bestScores = [50, 45, 40, 35, 30, 25, 20, 15, 10, 5];
 var bestScoreNames = ["Kevin", "Oscar", "Pam", "Jim", "Dwight",
 					  "Angela", "Ryan", "Meridith", "Creed", "Michael"];
@@ -1136,6 +1135,8 @@ function drawScene() {
 			}
 			mvPopMatrix();
 		}
+		mesgOver = "GAME OVER"
+		document.getElementById("mesgOver").innerHTML = mesgOver;
 	}
 }
 
@@ -1166,9 +1167,10 @@ var currentlyPressedKeys = {};
 function handleKeyDown(event) {
   // storing the pressed state for individual key
   //works if game is running
-  if(gameOver == 0){
+  currentlyPressedKeys[event.keyCode] = true;
+  /*if(gameOver == 0){
 	currentlyPressedKeys[event.keyCode] = true;
-  }
+  }*/
 }
 
 function handleKeyUp(event) {
@@ -1181,11 +1183,13 @@ function handleKeys() {
 	
   if (currentlyPressedKeys[87]) {
     // W
-	if (starting == 0){
+	console.log("ready2go");
+	/*if (starting == 0){
 		//trenutno igra ne teče, zaženemo z tipko W
 		starting = 1;
 		//console.log("1");
-	}
+	}*/
+	
 	falling = 0;
 	fall = 0;
 	if(y == 3 && duration > ringsPassed){
@@ -1235,9 +1239,73 @@ function handleKeys() {
 	}
   }
   if (currentlyPressedKeys[32]) {
-    // SPACE
-	defense = 1;
-  }
+	// SPACE, will be used for restart
+	if(gameOver == 1){
+		console.log("gogo");
+		for(var i = 0; i<10; i++){
+			if(bestScores[i] < ringsPassed && ezMode == 0){
+				for(var j = 9; j>=i; j--){
+					bestScores[j] = bestScores[j-1];
+					bestScoreNames[j] = bestScoreNames[j-1];
+				}
+				bestScores[i] = ringsPassed;
+				bestScoreNames[i] = "player";
+				break;
+			}
+		}
+		posZ = [-10.0, -20.0, -30.0, -40.0, -50.0,
+				-60.0, -70.0, -80.0, -90.0, -100.0, 
+				-108.0, -116.0, -124.0, -132.0, -140.0,
+				-148.0, -156.0, -164.0, -172.0, -180.0,
+				-186.0, -192.0, -198.0, -204.0, -210.0,
+				-216.0, -222.0, -228.0, -234.0, -240.0,
+				-246.0, -252.0, -258.0, -264.0, -270.0,
+				-276.0, -282.0, -288.0, -294.0, -300.0,
+				-306.0, -312.0, -318.0, -324.0, -330.0,
+				-336.0, -342.0, -348.0, -354.0, -360.0,
+				-366.0, -372.0, -378.0, -384.0, -390.0,
+				-396.0, -402.0, -408.0, -414.0, -420.0
+				];	//60
+		falling = 0;	//trenutno NI pritisnjen W
+		asc = 0;	//let navzgor
+		gameOver = 0;
+		finY = 0;	//shrani y ko se zaletimo
+		finX = 0;	//shrani x ko se zaletimo
+		puG = 0;	//ptic pobral good powerup
+		puB = 0;	//ptic pobral bad powerup
+		ringsPassed = 0;	//score counter
+		starting = 1;		//igra teče
+		speed = 0.08;	//movement speed
+		xMov = 0;	//change of direction x by keyboard
+		yMov = 0;	//change of direction y by keyboard
+		zMov = 0;	//not used
+		defense = 0;	//a je bil pritisnjen space al ne
+		fall = 0;		//padanje navzdol
+		x = -1;	//random good powerup index
+		y = -1;	//random bad powerup index
+		duration = 0; //vsi powerupi veljajo, dokler ne preletimo treh obročev, razen imunitete
+		hitInd = 0.9; //ker spreminjamo velikost ptica, mormo tut obcutljivost collision detectiona
+		imunity = -1; //st obroca, ki smo ga zadeli/zgresili z imuniteto
+		sight = 100;	//dolžina vidnega polja 
+		mesgOver = "";
+		document.getElementById("mesgOver").innerHTML = mesgOver;
+		pwr = "";
+		
+		/*var camera = 1; //2 je fisrt person view
+		var viewpoint = 5.0; //predvidevamo, da smo najprej v noramalnem pogledu
+		var enemyBirdVar = 0;		//TBD???
+		var ezMode = 0;		//easy mode, no leveling, unable to get on highscore list, TBD
+		var lastTime = 0;	//??
+		var pause =0;
+		var enemySpeed = 0.25; //hitrost sovražnih ptičev */		
+	}
+	
+	else if (starting == 0){
+		//trenutno igra ne teče, zaženemo z tipko space
+		starting = 1;
+	}
+	
+ }
   if (currentlyPressedKeys[79]) {
     // O
 	//damo to v htmlju narest??
@@ -1375,6 +1443,10 @@ function handleMsg(){
 function handleGameOver(){
 	for(var i = 0; i<10; i++){
 		if(bestScores[i] < ringsPassed && ezMode == 0){
+			for(var j = 9; j>=i; j--){
+				bestScores[j] = bestScores[j-1];
+				bestScoreNames[j] = bestScoreNames[j-1];
+			}
 			bestScores[i] = ringsPassed;
 			bestScoreNames[i] = "player";
 			break;
@@ -1382,23 +1454,42 @@ function handleGameOver(){
 	}
 	mesgOver = "GAME OVER"
 	document.getElementById("mesgOver").innerHTML = mesgOver;
-	var falling = 0;	//trenutno NI pritisnjen W
-	var asc = 0;	//let navzgor
-	var ringsPassed = 0;	//score counter, TBD
-	var gameOver = 0;		//game stopper
-	var starting = 0;		//igra teče
-	var speed = 0.08;	//movement speed
-	var xMov = 0;	//change of direction x by keyboard
-	var yMov = 0;	//change of direction y by keyboard
-	var zMov = 0;	//not used
-	var defense = 0;	//a je bil pritisnjen space al ne
-	var fall = 0;		//padanje navzdol
-	var x = -1;	//random good powerup index
-	var y = -1;	//random bad powerup index
-	var duration = 0; //vsi powerupi veljajo, dokler ne preletimo treh obročev, razen imunitete
-	var hitInd = 0.9; //ker spreminjamo velikost ptica, mormo tut obcutljivost collision detectiona
-	var imunity = -1; //st obroca, ki smo ga zadeli/zgresili z imuniteto
-	//document.getElementById("score").innerHTML = ringsPassed;
+	falling = 0;	//trenutno NI pritisnjen W
+	asc = 0;	//let navzgor
+	gameOver = 0;
+	ringsPassed = 0;	//score counter
+	starting = 0;		//igra teče
+	speed = 0.08;	//movement speed
+	xMov = 0;	//change of direction x by keyboard
+	yMov = 0;	//change of direction y by keyboard
+	zMov = 0;	//not used
+	defense = 0;	//a je bil pritisnjen space al ne
+	fall = 0;		//padanje navzdol
+	x = -1;	//random good powerup index
+	y = -1;	//random bad powerup index
+	duration = 0; //vsi powerupi veljajo, dokler ne preletimo treh obročev, razen imunitete
+	hitInd = 0.9; //ker spreminjamo velikost ptica, mormo tut obcutljivost collision detectiona
+	imunity = -1; //st obroca, ki smo ga zadeli/zgresili z imuniteto
+	sight = 100;	//dolžina vidnega polja 
+	mesgOver = "";
+	pwr = "";			
+	posZ = [-10.0, -20.0, -30.0, -40.0, -50.0,
+			-60.0, -70.0, -80.0, -90.0, -100.0, 
+			-108.0, -116.0, -124.0, -132.0, -140.0,
+			-148.0, -156.0, -164.0, -172.0, -180.0,
+			-186.0, -192.0, -198.0, -204.0, -210.0,
+			-216.0, -222.0, -228.0, -234.0, -240.0,
+			-246.0, -252.0, -258.0, -264.0, -270.0,
+			-276.0, -282.0, -288.0, -294.0, -300.0,
+			-306.0, -312.0, -318.0, -324.0, -330.0,
+			-336.0, -342.0, -348.0, -354.0, -360.0,
+			-366.0, -372.0, -378.0, -384.0, -390.0,
+			-396.0, -402.0, -408.0, -414.0, -420.0
+			];	//60
+	setInterval(function() {
+	  handleKeys();
+    }, 15);
+	console.log("ready2go");
 }
 
 function cameraPos(x){		//NOT USED YET
@@ -1492,12 +1583,13 @@ function start() {
       requestAnimationFrame(animate);
 	  falling = 1;
 	  defense = 0;
-	  if(gameOver == 1){
+	  /*if(gameOver == 1){
 		  handleGameOver();
-	  }
+	  }*/
 	  handleKeys();
       drawScene();
 	  handleMsg();
+	  console.log("werk!");
     }, 15);
   }
 }
