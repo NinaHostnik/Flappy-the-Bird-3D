@@ -1524,11 +1524,11 @@ function handleLoadedRing(ringData) {
 	ringVertexNormalBuffer.itemSize = 3;
 	ringVertexNormalBuffer.numItems = ringData.vertexPosition.length / 3;
 	
-	ringVertexColorBuffer = gl.createBuffer();
+	/*ringVertexColorBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, ringVertexColorBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(ringData.vertexColorAttribute), gl.STATIC_DRAW);
 	ringVertexColorBuffer.itemSize = 3;
-	ringVertexColorBuffer.numItems = ringData.vertexColorAttribute.length / 3;
+	ringVertexColorBuffer.numItems = ringData.vertexColorAttribute.length / 3;*/
 	
 	ringVertexIndexBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ringVertexIndexBuffer);
@@ -1546,7 +1546,8 @@ function loadRing() {
 		if (request.readyState == 4) {
 			handleLoadedRing(JSON.parse(request.responseText));
 		}
-	};
+	}
+	request.send();
 }
 
 //funkcija start
@@ -1574,6 +1575,7 @@ function start() {
     
     // Next, load and set up the textures we'll be using.
     //initTextures();
+	loadRing();
 
     // Bind keyboard handling functions to document handlers
     document.onkeydown = handleKeyDown;
