@@ -96,10 +96,9 @@ var lastPoints = -1; //prepreči dvojne
 var bestScores = [50, 45, 40, 35, 30, 25, 20, 15, 10, 5];
 var bestScoreNames = ["Kevin", "Oscar", "Pam", "Jim", "Dwight",
 					  "Angela", "Ryan", "Meridith", "Creed", "Michael"];
-var mesgOver = "";		
-		
-		
-		
+var mesgOver = "";
+var pwr = "";
+
 
 function mvPushMatrix() {
   var copy = mat4.create();
@@ -696,6 +695,7 @@ function drawScene() {
 	else if(gameOver == 0 && starting == 0){  //IGRA NE TEČE
 		mesgOver = "";
 		document.getElementById("mesgOver").innerHTML = mesgOver;
+		document.getElementById("score").innerHTML = ringsPassed;
 		// set the rendering environment to full canvas size
 		gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 		// Clear the canvas before we start drawing on it.
@@ -773,7 +773,7 @@ function drawScene() {
 				gl.drawElements(gl.TRIANGLES, ringVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 				mvPopMatrix();
 			}
-			if(j%5==0 && j > 0){ //good powerup
+			if(j%4==0 && j > 0){ //good powerup
 				mvPushMatrix();
 				
 				gl.bindBuffer(gl.ARRAY_BUFFER, powerVertexPositionBuffer);
@@ -790,7 +790,7 @@ function drawScene() {
 				gl.drawElements(gl.TRIANGLES, powerVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 				mvPopMatrix();
 			}
-			else if(j%6==0 && j%5!= 0){ //bad powerup
+			else if(j%2==0 && j%4!= 0){ //bad powerup
 				mvPushMatrix();
 				
 				gl.bindBuffer(gl.ARRAY_BUFFER, powerVertexPositionBuffer);
@@ -814,12 +814,11 @@ function drawScene() {
 		// isto kot zgoraj
 		mesgOver = "";
 		document.getElementById("mesgOver").innerHTML = mesgOver;
-		if(y == 2 && duration < ringsPassed){
+		if(y == 2 && duration > ringsPassed){
 			sight = 15;
 		}
-		else if(y == 2 &&duration == ringsPassed){
+		else if(y == 2 &&duration == ringsPassed || y==-1){
 			y = -1;
-			duration = 0;
 			sight = 100;
 		}
 		
@@ -847,14 +846,13 @@ function drawScene() {
 		// array, setting attributes, and pushing it to GL.
 		
 			//powerup za manjsega ptica
-		if(x = 0 && duration < ringsPassed){
-			mat4.scale(mvMatrix, [0.1, 0.1, 0.1]);
-			hitInd = hitInd + 0.01;
+		if(x == 0 && duration > ringsPassed){
+			mat4.scale(mvMatrix, [0.5, 0.5, 0.5]);
+			hitInd = hitInd + 0.05;
 		}
-		if(x = 0 && duration == ringsPassed){
+		if(x == 0 && duration == ringsPassed || x==-1){
 			x = -1;
 			hitInd = 0.9;
-			duration = 0;
 		}
 		gl.bindBuffer(gl.ARRAY_BUFFER, flappyVertexPositionBuffer);
 		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, flappyVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -874,13 +872,12 @@ function drawScene() {
 		mvPopMatrix();
 		if(falling == 1){
 			asc = 0;
-			if(y == 3 && duration < ringsPassed){
-				yMov = yMov - fall*(Math.random()*0.5);
-				fall = fall + Math.random()*0.1;
+			if(y == 3 && duration > ringsPassed){
+				yMov = yMov - fall*(Math.random()*0.14 + 0.01);
+				fall = fall + Math.random()*0.3 +0.01;
 			}
-			if(y == 3 && duration < ringsPassed){
+			if(y == 3 && duration == ringsPassed || y == -1){
 				y = -1; 
-				duration = 0;
 				yMov = yMov - fall*0.1;
 				fall = fall + 0.05;
 			}
@@ -899,9 +896,8 @@ function drawScene() {
 					}
 				}
 				else{
-					if(x == 3){
+					if(imunity == -2){
 						imunity = j;
-						x = -1;
 					}
 					else if(imunity == j){
 						//ne umremo, ne dobimo tock za ta obroc
@@ -917,15 +913,19 @@ function drawScene() {
 				}
 			}
 			if(posZ[j]-0.1 <= -6.82 && posZ[j]-0.1 >= -6.9){
-				ringsPassed = ringsPassed + 1;
-				console.log("ringsPassed");
-					//dvojne točke
-				if(x = 1 && duration < ringsPassed){
+				if(j != imunity){
 					ringsPassed = ringsPassed + 1;
-				}
-				if(x = 1 && duration == ringsPassed){
-					x = -1;
-					duration = 0;
+					document.getElementById("score").innerHTML = ringsPassed;
+					console.log("ringsPassed"+ringsPassed);
+					console.log("duration"+duration);
+						//dvojne točke
+					if(x == 1 && duration > ringsPassed){
+						ringsPassed = ringsPassed + 1;
+						document.getElementById("score").innerHTML = ringsPassed;
+					}
+					if(x == 1 && duration == ringsPassed || x==-1){
+						x = -1;
+					}
 				}
 			}
 			
@@ -939,9 +939,6 @@ function drawScene() {
 			for(var i = 0; i<4; i++){
 				mvPushMatrix();
 				mat4.rotate(mvMatrix, degToRad(i*90), [0, 0, 1]);
-				//mat4.translate(mvMatrix, [-1, -1.5, -10.0]);
-				//mat4.rotate(mvMatrix, degToRad(10), [1, 0, 0]);
-				//mat4.rotate(mvMatrix, degToRad(25), [0, 1, 0]);
 				
 				gl.bindBuffer(gl.ARRAY_BUFFER, ringVertexPositionBuffer);
 				gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, ringVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -957,7 +954,7 @@ function drawScene() {
 				gl.drawElements(gl.TRIANGLES, ringVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 				mvPopMatrix();
 			}
-			if(j%5==0 && j > 0){ //good powerup
+			if(j%4==0 && j > 0){ //good powerup
 				mvPushMatrix();
 				if(posZ[j]+0.1 >= -7.1 && posZ[j]+0.1 <= -7.0){
 					if(posX[j]-xMov > -0.4 && posX[j]-xMov < 0.4){	//po X je ptič zadel powerup
@@ -981,7 +978,7 @@ function drawScene() {
 				gl.drawElements(gl.TRIANGLES, powerVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 				mvPopMatrix();
 			}
-			else if(j%6==0 && j%5!= 0){ //bad powerup
+			else if(j%2==0 && j%4!= 0){ //bad powerup
 				mvPushMatrix();
 				if(posZ[j]+0.1 >= -7.1 && posZ[j]+0.1 <= -7.0){
 					if(posX[j]-xMov > -0.4 && posX[j]-xMov < 0.4){	//po X je ptič zadel powerup
@@ -1007,17 +1004,16 @@ function drawScene() {
 			}
 			mvPopMatrix();
 			if(gameOver == 0){
-				if(x == 2 && duration < ringsPassed){
-					posZ[j] = posZ[j] + 0.01;
+				if(x == 2 && duration > ringsPassed){
+					posZ[j] = posZ[j] + 0.02;
 				}
-				else if(y == 1&& duration < ringsPassed){
-					posZ[j] = posZ[j] + 0.2;
+				else if(y == 1 && duration > ringsPassed){
+					posZ[j] = posZ[j] + 0.1;
 				}
 				else{
 					if(duration == ringsPassed){
 						if(x==2){x=-1;}
 						if(y==1){y=-1;}
-						duration = 0;
 					}
 					posZ[j] = posZ[j] + speed;
 				}
@@ -1026,12 +1022,11 @@ function drawScene() {
 	}
 	else if(gameOver == 1){
 		// isto kot zgoraj		
-		if(y == 2 && duration < ringsPassed){
+		if(y == 2 && duration > ringsPassed){
 			sight = 20;
 		}
-		else if(y == 2 &&duration == ringsPassed){
+		else if(y == 2 &&duration == ringsPassed || y == -1){
 			y = -1;
-			duration = 0;
 			sight = 100;
 		}
 		
@@ -1058,14 +1053,13 @@ function drawScene() {
 		// Draw the flappy by binding the array buffer to the flappy's vertices
 		// array, setting attributes, and pushing it to GL.
 		
-		if(x = 0 && duration < ringsPassed){
+		if(x == 0 && duration > ringsPassed){
 			mat4.scale(mvMatrix, [0.7, 0.7, 0.7]);
 			hitInd = hitInd + 0.07;
 		}
-		if(x = 0 && duration == ringsPassed){
+		if(x == 0 && duration == ringsPassed || x==-1){
 			x = -1;
 			hitInd = 0.9;
-			duration = 0;
 		}
 		
 		gl.bindBuffer(gl.ARRAY_BUFFER, flappyVertexPositionBuffer);
@@ -1106,7 +1100,7 @@ function drawScene() {
 				gl.drawElements(gl.TRIANGLES, ringVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 				mvPopMatrix();
 			}
-			if(j%5==0 && j > 0){ //good powerup
+			if(j%4==0 && j > 0){ //good powerup
 				mvPushMatrix();
 				
 				gl.bindBuffer(gl.ARRAY_BUFFER, powerVertexPositionBuffer);
@@ -1123,7 +1117,7 @@ function drawScene() {
 				gl.drawElements(gl.TRIANGLES, powerVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 				mvPopMatrix();
 			}
-			else if(j%6==0 && j%5!= 0){ //bad powerup
+			else if(j%2==0 && j%4!= 0){ //bad powerup
 				mvPushMatrix();
 				
 				gl.bindBuffer(gl.ARRAY_BUFFER, powerVertexPositionBuffer);
@@ -1194,13 +1188,12 @@ function handleKeys() {
 	}
 	falling = 0;
 	fall = 0;
-	if(y == 3 && duration < ringsPassed){
+	if(y == 3 && duration > ringsPassed){
 		yMov = yMov + asc*(Math.random()*0.5);
 		asc = asc + (Math.random()*0.1);
 	}
-	else if(y == 3 && duration < ringsPassed){
+	else if(y == 3 && duration == ringsPassed || y == -1){
 		y = -1;
-		duration = 0;
 		yMov = yMov + asc*0.1;
 		asc = asc + 0.05;
 	}
@@ -1212,12 +1205,11 @@ function handleKeys() {
   }
   if (currentlyPressedKeys[65]) {
     //A
-	if(y == 0 && duration < ringsPassed){
+	if(y == 0 && duration > ringsPassed){
 		xMov = xMov + speed;
 	}
 	else if(y == 0 && duration == ringsPassed){
 		xMov = xMov - speed;
-		duration = 0;
 		y = -1;
 	}
 	else{
@@ -1231,12 +1223,11 @@ function handleKeys() {
   }
   if (currentlyPressedKeys[68]) {
     // D
-	if(y == 0 && duration < ringsPassed){
+	if(y == 0 && duration > ringsPassed){
 		xMov = xMov - speed;
 	}
 	else if(y == 0 && duration == ringsPassed){
 		xMov = xMov + speed;
-		duration = 0;
 		y = -1;
 	}
 	else{
@@ -1272,26 +1263,34 @@ igra
 */
 
 function enemyBirds(){
-	
+	//TBD in Unity
 }
 
 function handlePU(){
-	duration = ringsPassed + 3;
-	console.log(duration);
+	if(x != -1 || y != -1){		//deaktiviramo prejsnji powerup
+		x = -1;
+		y = -1;
+	}
 	if(puG == 1){
+		duration = ringsPassed + 4;		//velja za tri obroce, brez tega obroca, v katerem je powerup
 		x = Math.floor(Math.random()* 4); //se ni osvetlitve, zato ena manj
 		console.log("x"+x);
 		// x=0: vecji obroci -> ubistvu je isto, ce zmanjsamo ptica
 		if(x == 1){
 			//dvojne tocke za obroce
-			duration = duration + 3;
+			duration = duration + 3; 	//myb tut tuki 4?
 		}
-		//x=2: pocasnejsi let
+		//x=2: slower
+
+		else if(x == 3){
+			imunity = -2;	//ce je -2, pomen da mamo imuniteto
+		}
 		//x=3: imuniteta, velja, dokler ne porabimo
 		//x=4: osvetlitev obrocev, TBD
 		puG = 0;
 	}
 	if(puB == 1){
+		duration = ringsPassed + 4;		//velja za tri obroce, brez tega obroca, v katerem je powerup
 		y = Math.floor(Math.random()* 4);
 		console.log("y"+y);
 		//y=0: obrnjeno levo-desno
@@ -1300,6 +1299,77 @@ function handlePU(){
 		//y=3: naključna hitrost vzpenjanja/padanja
 		puB = 0;
 	}
+	console.log(duration);
+}
+
+function handleMsg(){
+	pwr = "";
+	if(x == 0){
+		pwr = "smaller bird";
+		if(imunity == -2){
+			pwr = pwr + ", bonus life";
+		}
+	}
+	else if(x == 1){
+		pwr = "double points";
+		if(imunity == -2){
+			pwr = pwr + ", bonus life";
+		}
+	}
+	else if(x == 2){
+		pwr = "slower";
+		if(imunity == -2){
+			pwr = pwr + ", bonus life";
+		}
+	}
+	else if(imunity == -2){
+		if(pwr == ""){
+			pwr = "bonus life";
+		}
+		else if(pwr == "bonus life"){
+			//do nothing
+		}
+		else{
+			pwr = pwr + ", bonus life";
+		}
+	}
+	else if(y == 0){
+		pwr = "random left-right";
+		if(imunity == -2){
+			pwr = pwr + ", bonus life";
+		}
+	}
+	else if(y == 1){
+		pwr = "faster";
+		if(imunity == -2){
+			pwr = pwr + ", bonus life";
+		}
+	}
+	else if(y == 2){
+		pwr = "fog";
+		if(imunity == -2){
+			pwr = pwr + ", bonus life";
+		}
+	}
+	else if(y == 3){
+		pwr = "random up-down speed";
+		if(imunity == -2){
+			pwr = pwr + ", bonus life";
+		}
+	}
+	else if(x == -1){
+		pwr = "";
+		if(imunity == -2){
+			pwr = pwr + "bonus life";
+		}
+	}
+	else if(y == -1){
+		pwr = "";
+		if(imunity == -2){
+			pwr = pwr + "bonus life";
+		}
+	}
+	document.getElementById("pwr").innerHTML = pwr;
 }
 
 function handleGameOver(){
@@ -1328,7 +1398,7 @@ function handleGameOver(){
 	var duration = 0; //vsi powerupi veljajo, dokler ne preletimo treh obročev, razen imunitete
 	var hitInd = 0.9; //ker spreminjamo velikost ptica, mormo tut obcutljivost collision detectiona
 	var imunity = -1; //st obroca, ki smo ga zadeli/zgresili z imuniteto
-	
+	//document.getElementById("score").innerHTML = ringsPassed;
 }
 
 function cameraPos(x){		//NOT USED YET
@@ -1421,13 +1491,13 @@ function start() {
 	setInterval(function() {
       requestAnimationFrame(animate);
 	  falling = 1;
-	  //handlePU();
 	  defense = 0;
 	  if(gameOver == 1){
 		  handleGameOver();
 	  }
 	  handleKeys();
       drawScene();
+	  handleMsg();
     }, 15);
   }
 }

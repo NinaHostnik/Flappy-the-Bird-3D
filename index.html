@@ -6,6 +6,34 @@
 		<script type="text/javascript" src="./glMatrix-0.9.5.min.js"></script>
 		<script src="./script.js" type="text/javascript"></script>
 		
+		<style>
+			div.container {
+				position: relative;
+				text-align: center;
+			}
+			/* Top left text */
+			div.top-left {
+				position: absolute;
+				top: 8px;
+				left: 16px;
+				font-family: verdana;
+			}
+
+			/* Top right text */
+			div.top-right {
+				position: absolute;
+				top: 8px;
+				right: 16px;
+				font-family: verdana;
+			}
+			div.centered {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+			}
+		</style>
+		
 	    <!-- Fragment shader program -->
 	    <script id="shader-fs" type="x-shader/x-fragment">
 		    // set medium percision 
@@ -42,15 +70,19 @@
 			<font size="20" face="verdana">Flappy the Bird 3D</font>
 			<br> </br>
 		</div>
-		<div id="content" align="center">
-			<canvas id="glcanvas" width="1000px" height="600px" style="background:'testbg.png'">
-				No <code>&lt;canvas&gt;</code> suppport in your browser.
-			</canvas>
+		<div class="container">
+			<div id="content" align="center">
+				<canvas id="glcanvas" width="1000px" height="600px" style="background:'testbg.png'">
+					No <code>&lt;canvas&gt;</code> suppport in your browser.
+				</canvas>
+			</div>
+			<div class="top-left">POWERUP:<p id = "pwr"></p></div>
+			<div class="top-right">SCORE: <p id = "score"></p></div>
+			<div class="centered"><font size="10" face="verdana"><p id = "mesgOver"></p></font></div>
 		</div>
 		<div align="center" > 
 			<br> </br>
 			<font size="2" face="verdana">W=start the game, up; A=left; D=right</font>
-			<font size="10" face="verdana"><p id = "mesgOver"></p></font>
 		</div>
 	</body>
 
